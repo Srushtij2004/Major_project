@@ -1,0 +1,78 @@
+#include <Wire.h>
+#include <LiquidCrystal_I2C.h>
+#include <DHT.h>
+
+#define DHTPIN 2        // DHT11 data pin connected to D2
+#define DHTTYPE DHT11
+
+#define SOILPIN 3       // Soil Sensor D0 pin connected to D3
+
+LiquidCrystal_I2C lcd(0x27, 16, 2); // I2C address might be 0x27 or 0x3F
+
+DHT dht(DHTPIN, DHTTYPE);
+
+void setup() {
+  lcd.init();
+  lcd.backlight();
+
+  dht.begin();
+  pinMode(SOILPIN, INPUT);
+
+  Serial.begin(9600);
+}
+
+void loop() {
+  float temperature = dht.readTemperature();
+  float humidity = dht.readHumidity();
+  int soilState = digitalRead(SOILPIN);
+
+  // Display Temperature and Humidity
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  if (isnan(temperature)) {
+    lcd.print("Err");
+  } else {
+    lcd.print(temperature);
+    lcd.print("C");
+  }
+
+  lcd.setCursor(0, 1);
+  lcd.print("Humidity: ");
+  if (isnan(humidity)) {
+    lcd.print("Err");
+  } else {
+    lcd.print(humidity);
+    lcd.print("%");
+  }
+
+  delay(2000);
+
+  // Display Soil Moisture and Quality
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Soil Status:");
+
+  lcd.setCursor(0, 1);
+  if (soilState == LOW) {
+    lcd.print("Wet  ");
+  } else {
+    lcd.print("Dry ");
+  }
+
+  delay(2000);
+
+  // Display Soil Quality
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Soil Quality:");
+
+  lcd.setCursor(0, 1);
+  if (soilState == LOW && humidity >= 40 && humidity <= 60 && temperature >= 20 && temperature <= 30) {
+    lcd.print("Good");
+  } else {
+    lcd.print("Bad");
+  }
+
+  delay(2000);
+}
